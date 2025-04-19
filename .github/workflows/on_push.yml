@@ -1,21 +1,71 @@
 name: Build Re:VIEW to make distribution file
 # The workflow is triggered on pushes to the repository.
-on: [push]
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      target_dir:
+        description: 'Re:VIEWプロジェクトのディレクトリ（例: book1）'
+        required: false
+        default: '.'
+      config1:
+        description: '1つ目のRe:VIEW configファイル'
+        required: false
+        default: 'config.yml'
+      config2:
+        description: '2つ目のRe:VIEW configファイル'
+        required: false
+        default: 'config_alt.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: vvakame/review:5.8
+
     steps:
     # uses v3 Stable version
     # https://github.com/actions/checkout
     - name: checkout source
       uses: actions/checkout@v4.2.2
+
+    - name: Bundle install
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        bundle install
+
+    - name: NPM install
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        rm -rf node_modules
+        npm install --unsafe-perm
+
+    # Convert Markdown to Re:VIEW
+    - name: Convert Markdown to Re:VIEW
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}/articles"
+        rake pandoc2review
+
     # Build Artifacts
-    - name: Build distribution file
-      uses: TechBooster/ReVIEW-build-artifact-action@master
-    # Upload Distribution file
-    - name: Upload distribution file to github artifacts
-      uses: actions/upload-artifact@v4.6.1
+    - name: Build PDF - config1
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        mkdir -p pdf
+        REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 }}" npm run pdf
+        for f in *.pdf; do
+          mv "$f" "pdf/config1_${f}"
+        done
+
+    - name: Build PDF - config2
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        REVIEW_CONFIG_FILE="${{ github.event.inputs.config2 }}" npm run pdf
+        for f in *.pdf; do
+          mv "$f" "pdf/config2_${f}"
+        done
+
+    - name: Upload PDFs
+      uses: actions/upload-artifact@v4
       with:
-        name: Output documents
-        path: ./articles/*.pdf
+        name: built-pdfs
+        path: ${{ github.event.inputs.target_dir || '.' }}/pdf/*.pdf
