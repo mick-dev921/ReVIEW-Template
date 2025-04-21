@@ -15,7 +15,7 @@ on:
       config2:
         description: '2つ目のRe:VIEW configファイル'
         required: false
-        default: 'config_alt.yml'
+        default: 'config_ebook.yml'
 
 jobs:
   build:
@@ -29,21 +29,14 @@ jobs:
     - name: checkout source
       uses: actions/checkout@v4.2.2
 
-    - name: Bundle install
+    - name: Setup Re:VIEW
       run: |
-        cd "${{ github.event.inputs.target_dir || '.' }}"
-        bundle install
-
-    - name: NPM install
-      run: |
-        cd "${{ github.event.inputs.target_dir || '.' }}"
-        rm -rf node_modules
-        npm install --unsafe-perm
+        ./setup.sh
 
     # Convert Markdown to Re:VIEW
     - name: Convert Markdown to Re:VIEW
       run: |
-        cd "${{ github.event.inputs.target_dir || '.' }}/articles"
+        cd ./articles
         rake pandoc2review
 
     # Build Artifacts
@@ -52,6 +45,7 @@ jobs:
         cd "${{ github.event.inputs.target_dir || '.' }}"
         mkdir -p pdf
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 }}" npm run pdf
+        shopt -s nullglob
         for f in *.pdf; do
           mv "$f" "pdf/config1_${f}"
         done
@@ -60,10 +54,10 @@ jobs:
       run: |
         cd "${{ github.event.inputs.target_dir || '.' }}"
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config2 }}" npm run pdf
+        shopt -s nullglob
         for f in *.pdf; do
           mv "$f" "pdf/config2_${f}"
         done
-
     - name: Upload PDFs
       uses: actions/upload-artifact@v4
       with:
