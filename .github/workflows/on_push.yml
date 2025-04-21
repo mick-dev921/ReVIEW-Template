@@ -82,7 +82,8 @@ jobs:
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
         for f in ./articles/*.pdf; do
-          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/paperbook_${f}"
+          filename=$(basename "$f")
+          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/paperbook_${filename}"
         done
 
     - name: Build PDF - config for ebook
@@ -91,7 +92,8 @@ jobs:
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config-ebook.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
         for f in ./articles/*.pdf; do
-          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/ebook_${f}"
+          filename=$(basename "$f")
+          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/ebook_${filename}"
         done
 
     - name: Upload paper book PDF
