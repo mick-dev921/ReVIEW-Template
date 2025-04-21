@@ -81,14 +81,14 @@ jobs:
         cd "${{ github.event.inputs.target_dir || '.' }}"
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
-        cp -v *.pdf /github/workspace/pdf/
+        cp -v ./articles/*.pdf /github/workspace/pdf/
 
     - name: Build PDF - config for ebook
       run: |
         cd "${{ github.event.inputs.target_dir || '.' }}"
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config-ebook.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
-        cp -v *.pdf /github/workspace/pdf/
+        cp -v ./articles/*.pdf /github/workspace/pdf/
 
     - name: Upload PDFs
       uses: actions/upload-artifact@v4
