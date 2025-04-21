@@ -45,8 +45,8 @@ jobs:
         cd "${{ github.event.inputs.target_dir || '.' }}"
         mkdir -p pdf
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 }}" npm run pdf
-        shopt -s nullglob
         for f in *.pdf; do
+          [ -e "$f" ] || continue
           mv "$f" "pdf/config1_${f}"
         done
 
@@ -54,9 +54,9 @@ jobs:
       run: |
         cd "${{ github.event.inputs.target_dir || '.' }}"
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config2 }}" npm run pdf
-        shopt -s nullglob
         for f in *.pdf; do
-          mv "$f" "pdf/config2_${f}"
+          [ -e "$f" ] || continue
+          mv "$f" "pdf/config1_${f}"
         done
     - name: Upload PDFs
       uses: actions/upload-artifact@v4
