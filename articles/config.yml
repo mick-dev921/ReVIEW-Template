@@ -185,6 +185,8 @@ colophon: true
 # contentdir: .
 # pandoc2reviewを利用してMarkdownコンテンツを取り込むには、以下を有効にする
 # contentdir: _refiles
+contentdir: _refiles
+markdowndir: markdowns 
 
 # @<w>命令で使用する単語ファイルのパス。["common.csv", "mybook.csv"]のように配列指定も可
 # words_file: words.csv

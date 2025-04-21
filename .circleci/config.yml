@@ -149,6 +149,9 @@ jobs:
           condition: << parameters.target_dir >>
           steps:
             - run: 
+                name: Build markdown to review
+                command: cd << parameters.target_dir >> && rake pandoc2review
+            - run:
                 name: Build PDF
                 command: cd << parameters.target_dir >> && npm run pdf
             - run:
@@ -159,6 +162,9 @@ jobs:
       - unless:
           condition: << parameters.target_dir >>
           steps:
+            - run: 
+                name: Build markdown to review
+                command: cd ./articles && rake pandoc2review
             - run:
                 name: Build PDF
                 command: npm run pdf

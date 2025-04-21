@@ -1,21 +1,124 @@
 name: Build Re:VIEW to make distribution file
 # The workflow is triggered on pushes to the repository.
-on: [push]
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      target_dir:
+        description: 'Re:VIEWプロジェクトのディレクトリ（例: book1）'
+        required: false
+        default: '.'
+      config1:
+        description: '紙版Re:VIEW configファイル'
+        required: false
+        default: 'config.yml'
+      config2:
+        description: '電子版Re:VIEW configファイル'
+        required: false
+        default: 'config_ebook.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: vvakame/review:5.8
+
     steps:
     # uses v3 Stable version
     # https://github.com/actions/checkout
     - name: checkout source
       uses: actions/checkout@v4.2.2
-    # Build Artifacts
-    - name: Build distribution file
-      uses: TechBooster/ReVIEW-build-artifact-action@master
-    # Upload Distribution file
-    - name: Upload distribution file to github artifacts
-      uses: actions/upload-artifact@v4.6.1
+
+    - name: Cache Ruby gems
+      uses: actions/cache@v4
       with:
-        name: Output documents
-        path: ./articles/*.pdf
+        path: vendor/bundle
+        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gems-
+
+    - name: Cache npm modules
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
+    - name: Install Ruby gems
+      run: |
+        bundle config set path 'vendor/bundle'
+        bundle install --jobs 4 --retry 3
+
+    - name: Install npm packages
+      run: |
+        npm install --unsafe-perm
+
+    - name: Show target_dir and working dir
+      run: |
+        echo "target_dir: ${{ github.event.inputs.target_dir || '.' }}"
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        echo "pwd: $(pwd)"
+        echo "Directory listing:"
+        ls -al
+
+    - name: Show available rake tasks
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        cd ./articles
+        bundle exec rake -T
+
+    # Convert Markdown to Re:VIEW
+    - name: Convert Markdown to Re:VIEW
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        cd ./articles
+        rake pandoc2review
+
+    # Build Artifacts
+    - name: Build PDF - config for paper book
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config.yml' }}" npm run pdf
+        mkdir -p /github/workspace/pdf
+        for f in ./articles/*.pdf; do
+          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/paperbook_${{ github.run_number }}.pdf"
+        done
+
+    - name: Build PDF - config for ebook
+      run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config-ebook.yml' }}" npm run pdf
+        mkdir -p /github/workspace/pdf
+        for f in ./articles/*.pdf; do
+          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/ebook_${{ github.run_number }}.pdf"
+        done
+
+    # - name: Upload paper book PDF
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: paperbook_${{ github.run_number }}
+    #     path: "/github/workspace/pdf/paperbook_${{ github.run_number }}.pdf"
+
+    # - name: Upload ebook PDF
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ebook_${{ github.run_number }}
+    #     path: "/github/workspace/pdf/ebook_${{ github.run_number }}.pdf"
+
+    - name: Commit PDF in-place
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        cd "$GITHUB_WORKSPACE"
+
+        BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
+
+        git checkout $BRANCH_NAME
+
+        git add .
+        git commit -m "Auto-generated PDF preview for PR #${{ github.event.pull_request.number }}" || echo "No changes"
+        git push origin $BRANCH_NAME
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

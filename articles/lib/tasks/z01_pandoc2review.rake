@@ -22,11 +22,17 @@ require 'fileutils'
 require 'yaml'
 require 'date'
 
-def make_mdre(ch, p2r, path)
+def make_mdre(ch, p2r, path, srcdir = "markdowns")
   if File.exist?(ch) # re file
     FileUtils.cp(ch, path)
-  elsif File.exist?(ch.sub(/\.re\Z/, '.md')) # md file
-    system("#{p2r} #{ch.sub(/\.re\Z/, '.md')} > #{path}/#{ch}")
+  else
+    md_file = File.join(srcdir, ch.sub(/\.re\Z/, '.md'))
+    if File.exist?(md_file) # md file
+      puts "Generating #{ch} from #{md_file}"
+      system("#{p2r} #{md_file} > #{path}/#{ch}")
+    else
+      puts "Warning: #{ch} not found in #{md_file}"
+    end
   end
 end
 
@@ -54,6 +60,7 @@ task :pandoc2review do
   config = yaml_load_file_compatible('config.yml')
   if config['contentdir'] == '_refiles'
     path = '_refiles'
+    srcdir = config['markdowndir'] || '.'
     p2r = 'pandoc2review'
 
     unless File.exist?(path)
@@ -67,12 +74,12 @@ task :pandoc2review do
         catalog[block].each do |ch|
           if ch.kind_of?(Hash) # Parts
             ch.each_pair do |k, v|
-              make_mdre(k, p2r, path)
+              make_mdre(k, p2r, path, srcdir)
               # Chapters
-              v.each {|subch| make_mdre(subch, p2r, path) }
+              v.each {|subch| make_mdre(subch, p2r, path, srcdir) }
             end
           elsif ch.kind_of?(String) # Chapters
-            make_mdre(ch, p2r, path)
+            make_mdre(ch, p2r, path, srcdir)
           end
         end
       end
