@@ -111,6 +111,8 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
+        cd "$GITHUB_WORKSPACE"
+
         BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
 
         git checkout $BRANCH_NAME
