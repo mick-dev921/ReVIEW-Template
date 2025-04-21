@@ -33,9 +33,22 @@ jobs:
       run: |
         ./setup.sh
 
+    - name: Show target_dir and working dir
+      run: |
+        echo "target_dir: ${{ github.event.inputs.target_dir || '.' }}"
+        cd "${{ github.event.inputs.target_dir || '.' }}"
+        echo "pwd: $(pwd)"
+        echo "Directory listing:"
+        ls -al
+        
+    - name: Show available rake tasks
+      run: |
+        bundle exec rake -T
+
     # Convert Markdown to Re:VIEW
     - name: Convert Markdown to Re:VIEW
       run: |
+        cd "${{ github.event.inputs.target_dir || '.' }}"
         cd ./articles
         rake pandoc2review
 
