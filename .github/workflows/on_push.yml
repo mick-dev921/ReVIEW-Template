@@ -98,4 +98,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: built-pdfs
-        path: ${{ github.event.inputs.target_dir || '.' }}/pdf/*.pdf
+        path: ${{ github.event.inputs.target_dir || '.' }}/pdf/
