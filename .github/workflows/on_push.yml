@@ -9,11 +9,11 @@ on:
         required: false
         default: '.'
       config1:
-        description: '1つ目のRe:VIEW configファイル'
+        description: '紙版Re:VIEW configファイル'
         required: false
         default: 'config.yml'
       config2:
-        description: '2つ目のRe:VIEW configファイル'
+        description: '電子版Re:VIEW configファイル'
         required: false
         default: 'config_ebook.yml'
 
@@ -76,20 +76,20 @@ jobs:
         rake pandoc2review
 
     # Build Artifacts
-    - name: Build PDF - config1
+    - name: Build PDF - config for book
       run: |
         cd "${{ github.event.inputs.target_dir || '.' }}"
         mkdir -p pdf
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
-        cp -v pdf/*.pdf /github/workspace/pdf/
+        cp -v *.pdf /github/workspace/pdf/
 
-    - name: Build PDF - config2
+    - name: Build PDF - config for ebook
       run: |
         cd "${{ github.event.inputs.target_dir || '.' }}"
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config-ebook.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
-        cp -v pdf/*.pdf /github/workspace/pdf/
+        cp -v *.pdf /github/workspace/pdf/
 
     - name: Upload PDFs
       uses: actions/upload-artifact@v4
