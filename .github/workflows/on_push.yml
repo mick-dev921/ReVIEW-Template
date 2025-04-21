@@ -82,8 +82,7 @@ jobs:
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
         for f in ./articles/*.pdf; do
-          filename=$(basename "$f")
-          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/paperbook_${filename}"
+          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/paperbook_${{ github.run_number }}"
         done
 
     - name: Build PDF - config for ebook
@@ -92,21 +91,20 @@ jobs:
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config-ebook.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
         for f in ./articles/*.pdf; do
-          filename=$(basename "$f")
-          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/ebook_${filename}"
+          [ -f "$f" ] && cp "$f" "/github/workspace/pdf/ebook_${{ github.run_number }}"
         done
 
     - name: Upload paper book PDF
       uses: actions/upload-artifact@v4
       with:
         name: paperbook_${{ github.run_number }}
-        path: /github/workspace/pdf/paperbook_*.pdf
+        path: /github/workspace/pdf/paperbook_${{ github.run_number }}.pdf
 
     - name: Upload ebook PDF
       uses: actions/upload-artifact@v4
       with:
         name: ebook_${{ github.run_number }}
-        path: /github/workspace/pdf/ebook_*.pdf
+        path: /github/workspace/pdf/ebook_${{ github.run_number }}.pdf
 
     - name: Comment PDF link on PR
       if: github.event_name == 'pull_request'
