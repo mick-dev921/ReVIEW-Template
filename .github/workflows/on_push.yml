@@ -81,7 +81,7 @@ jobs:
         cd "${{ github.event.inputs.target_dir || '.' }}"
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
-        for f in *.pdf; do
+        for f in ./articles/*.pdf; do
           [ -f "$f" ] && cp "$f" "/github/workspace/pdf/paperbook_${f}"
         done
 
@@ -90,7 +90,7 @@ jobs:
         cd "${{ github.event.inputs.target_dir || '.' }}"
         REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config-ebook.yml' }}" npm run pdf
         mkdir -p /github/workspace/pdf
-        for f in *.pdf; do
+        for f in ./articles/*.pdf; do
           [ -f "$f" ] && cp "$f" "/github/workspace/pdf/ebook_${f}"
         done
 
