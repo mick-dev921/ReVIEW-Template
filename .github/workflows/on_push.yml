@@ -80,7 +80,7 @@ jobs:
       run: |
         cd "${{ github.event.inputs.target_dir || '.' }}"
         mkdir -p pdf
-        REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 }}" npm run pdf
+        REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config.yml' }}" npm run pdf
         for f in *.pdf; do
           [ -e "$f" ] || continue
           mv "$f" "pdf/config1_${f}"
@@ -89,7 +89,7 @@ jobs:
     - name: Build PDF - config2
       run: |
         cd "${{ github.event.inputs.target_dir || '.' }}"
-        REVIEW_CONFIG_FILE="${{ github.event.inputs.config2 }}" npm run pdf
+        REVIEW_CONFIG_FILE="${{ github.event.inputs.config1 || 'config-ebook.yml' }}" npm run pdf
         for f in *.pdf; do
           [ -e "$f" ] || continue
           mv "$f" "pdf/config1_${f}"
