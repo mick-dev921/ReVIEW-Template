@@ -105,3 +105,28 @@ jobs:
       with:
         name: ebook_${{ github.run_number }}
         path: ./pdf/ebook_*.pdf
+
+    - name: Comment PDF link on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const pr = context.payload.pull_request;
+          const runNumber = context.runNumber;
+          const runId = context.runId;
+
+          const body = [
+            "📘 ビルドが完了しました！",
+            "",
+            `🔗 [paperbook_${runNumber}.pdf](../../runs/${runId}?check_suite_focus=true#step:20:1)`,
+            `🔗 [ebook_${runNumber}.pdf](../../runs/${runId}?check_suite_focus=true#step:21:1)`,
+            "",
+            "👀 Actionsページの「Artifacts」から直接確認できます。"
+          ].join("\\n");
+
+          github.rest.issues.createComment({
+            issue_number: pr.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
