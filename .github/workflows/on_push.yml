@@ -100,13 +100,13 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: paperbook_${{ github.run_number }}
-        path: ./pdf/paperbook_*.pdf
+        path: /github/workspace/pdf/paperbook_*.pdf
 
     - name: Upload ebook PDF
       uses: actions/upload-artifact@v4
       with:
         name: ebook_${{ github.run_number }}
-        path: ./pdf/ebook_*.pdf
+        path: /github/workspace/pdf/ebook_*.pdf
 
     - name: Comment PDF link on PR
       if: github.event_name == 'pull_request'
